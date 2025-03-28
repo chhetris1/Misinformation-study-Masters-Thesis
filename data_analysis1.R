@@ -18,6 +18,14 @@ recoded_data <- working_data %>%
 #Note that all right answers were the option 1 for CRT items
 glimpse(recoded_data)
 
+table(recoded_data$CRT_1)
+table(recoded_data$CRT_2)
+table(recoded_data$CRT_3)
+table(recoded_data$CRT_4)
+table(recoded_data$CRT_5)
+table(recoded_data$CRT_6)
+table(recoded_data$CRT_7)
+
 
 
 recoded_data <- recoded_data %>% 
@@ -32,9 +40,11 @@ recoded_data <- recoded_data %>%
 glimpse(recoded_data)
 #attention check filtered out five participants
 #our n = 5
+
 recoded_data <- recoded_data %>% 
   mutate(rational = (DMQ_1+DMQ_2+ DMQ_3+ DMQ_4+ DMQ_5)/5, 
          intuitive = (DMQ_6+DMQ_7+ DMQ_8+ DMQ_9+ DMQ_10)/5)
+
 
 glimpse(recoded_data)
 cor(recoded_data$rational, recoded_data$intuitive) 
@@ -58,15 +68,47 @@ df <- recoded_data %>%
 
 head(df)
 
+
+
 library(lavaan)
-model <- '
-VOI ~ CRT
-VOI ~ CMQ + BRS 
-VOI ~ CRT + CMQ + BRS
-CMQ ~ CRT 
-BRS ~ CRT
+model1 <- '
+VOI ~ CRT + a*CMQ + b*BRS
+CMQ ~ c*CRT 
+BRS ~ d*CRT
+CMQ ~~ BRS
+ind1 := a*c
+ind2 := b*d
 '
-fit <- sem(model, data = df)
-summary(fit, rsq = TRUE)
+
+fit1 <- sem(model1, data = df)
+summary(fit1, rsq = TRUE, standardized = TRUE)
+
+#alternative model 
+model2 <- '
+VOI ~ DMQ + a*CMQ + b*BRS
+CMQ ~ c*DMQ 
+BRS ~ d*DMQ
+CMQ ~~ BRS
+ind1 := a*c
+ind2 := b*d
+'
+
+fit2 <- sem(model2, data = df)
+summary(fit2, rsq = TRUE, standardized = TRUE)
+
+
+
+
 parameterestimates(fit)
 lavCor(fit)
+
+library(SemPlot)
+
+
+#power analysis (no need to do)
+#cronbach alpha on individual items 
+#histograms (inspect)
+#two paragraphs for each of the results 
+#summarizing 
+
+
