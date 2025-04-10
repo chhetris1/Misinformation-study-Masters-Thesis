@@ -101,7 +101,7 @@ ind2 := b*d
 '
 
 fit1 <- sem(model1, data = df)
-summary(fit1, rsq = TRUE, standardized = TRUE)
+summary(fit1, rsq = TRUE, standardized = TRUE, fit.measures = TRUE)
 
 library(semPlot)
 semPaths(fit1, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15, 
@@ -127,6 +127,8 @@ semPaths(fit2, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15,
 
 
 parameterestimates(fit1)
+fitMeasures(fit1)
+parameterestimates(fit2)
 lavCor(fit)
 
 #bootstrapping 
@@ -137,8 +139,7 @@ semPaths(fit_boot, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15,
          residuals = FALSE, edge.label.cex = 0.8, color = "lightblue", 
          edge.color = "red")
 
-#bootstrap failed
-lavInspect(fit1)
+parameterEstimates(fit_boot)
 
 #power analysis (no need to do)
 #cronbach alpha on individual items 
