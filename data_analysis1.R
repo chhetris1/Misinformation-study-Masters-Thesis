@@ -56,7 +56,8 @@ df2 <- df1 %>%
          CMQ = rowMeans(across(starts_with("CMQ"))), 
          BRS = rowMeans(across(starts_with("BRS_"))),
          VOI = rowMeans(across(starts_with("VOI"))),
-         )
+         )%>% 
+  mutate(VTM = 100 - VOI) #VTM = vulnerability to misinformation
 glimpse(df2)
 #attention check filtered out five participants
 #our n = 194
@@ -85,14 +86,14 @@ cor(df2$CRT, df2$DMS )
 #cor 0.16, not bad
 
 df <- df2 %>% 
-  select(CRT, CMQ, BRS, VOI, DMS)
+  select(CRT, CMQ, BRS, VTM, DMS)
 
 head(df)
 ggplot(df, aes(x = CRT))+geom_density()
 
 library(lavaan)
 model1 <- '
-VOI ~ CRT + a*CMQ + b*BRS
+VTM ~ CRT + a*CMQ + b*BRS
 CMQ ~ c*CRT 
 BRS ~ d*CRT
 CMQ ~~ BRS
@@ -110,7 +111,7 @@ semPaths(fit1, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15,
 
 #alternative model 
 model2 <- '
-VOI ~ DMS + a*CMQ + b*BRS
+VTM ~ DMS + a*CMQ + b*BRS
 CMQ ~ c*DMS 
 BRS ~ d*DMS
 CMQ ~~ BRS
@@ -119,7 +120,7 @@ ind2 := b*d
 '
 
 fit2 <- sem(model2, data = df)
-summary(fit2, rsq = TRUE, standardized = TRUE)
+summary(fit2, rsq = TRUE, standardized = TRUE, fit.measures = TRUE)
 
 semPaths(fit2, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15, 
          residuals = FALSE, edge.label.cex = 0.8, color = "lightblue", 
@@ -133,7 +134,7 @@ lavCor(fit)
 
 #bootstrapping 
 fit_boot <- sem(model1, data = df, se = "bootstrap", bootstrap = 5000)
-summary(fit_boot, rsq = TRUE, standardized = TRUE)
+summary(fit_boot, rsq = TRUE, standardized = TRUE, fit.measures = TRUE)
 
 semPaths(fit_boot, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15, 
          residuals = FALSE, edge.label.cex = 0.8, color = "lightblue", 
@@ -141,17 +142,33 @@ semPaths(fit_boot, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15,
 
 parameterEstimates(fit_boot)
 
-#power analysis (no need to do)
-#cronbach alpha on individual items 
-#histograms (inspect)
-#two paragraphs for each of the results 
-#summarizing 
 
+#normality test
 
+par(mfrow = c(2,3) )
+hist(df$CRT)
+hist(df$CMQ)
+hist(df$BRS)
+hist(df$VTM)
+hist(df$DMS)
 
+qqnorm(df$CRT)
 
-df3 <- read_csv("raw_dataset.csv")
-glimpse(df3)
-table(df3$CRT_Q1[6:216 ])
-table(df3$CRT_3[6:216])
-table(recoded_data$CRT_3)
+shapiro.test(df$CRT)
+shapiro.test(df$CMQ)
+shapiro.test(df$VTM)
+shapiro.test(df$BRS)
+shapiro.test(df$DMS)
+
+library(semPower)
+semPower.postHoc(alpha = 0.05,
+                 N = 194,
+                 power = 0.80, 
+                 effect = 0.3, 
+                 nObserved = 29, 
+                 nLatent = 4)
+
+library(simsem)
+power_result <- sim(model = model1, n = 200, nRep = 1000, generate = model, 
+                    paramNames = list(b = 0.3))
+summary(power_result)
