@@ -46,18 +46,38 @@ sd(df1$age_1)
 table(df1$sex)
 table(df1$race)
 
+df1 <- df1 %>% 
+  filter(check1 == 5 & check2 == 1) 
 
+#cronbach alpha
+library(psych)
+CRT_items <- df1 %>% select(starts_with("CRT_"))
+glimpse(CRT_items)
+psych::alpha(CRT_items)
+
+VOI_items <- df1 %>% select(starts_with(("VOI")))
+glimpse(VOI_items)
+psych::alpha(VOI_items)
+
+DMQ_items <- df1 %>% select(starts_with("DMQ"))
+glimpse(DMQ_items)
+psych::alpha(DMQ_items, check.keys = TRUE )
+
+CMQ_items <- df1 %>% select(starts_with("CMQ"))
+glimpse(CMQ_items)
+psych::alpha(CMQ_items)
+
+BRS_items <- df1 %>% select(starts_with("BRS_"))
+glimpse(BRS_items)
+psych::alpha(BRS_items)
 
 df2 <- df1 %>% 
-  #keeping only the rows that passed attention check
-  filter(check1 == 5 & check2 == 1)%>%
   #aggregating
-  mutate(CRT = rowSums(across(starts_with("CRT_"))),
+  mutate(CRT = rowMeans(across(starts_with("CRT_"))),
          CMQ = rowMeans(across(starts_with("CMQ"))), 
          BRS = rowMeans(across(starts_with("BRS_"))),
          VOI = rowMeans(across(starts_with("VOI"))),
-         )%>% 
-  mutate(VTM = 100 - VOI) #VTM = vulnerability to misinformation
+         )
 glimpse(df2)
 #attention check filtered out five participants
 #our n = 194
@@ -86,14 +106,14 @@ cor(df2$CRT, df2$DMS )
 #cor 0.16, not bad
 
 df <- df2 %>% 
-  select(CRT, CMQ, BRS, VTM, DMS)
+  select(CRT, CMQ, BRS, VOI, DMS)
 
 head(df)
 ggplot(df, aes(x = CRT))+geom_density()
 
 library(lavaan)
 model1 <- '
-VTM ~ CRT + a*CMQ + b*BRS
+VOI ~ CRT + a*CMQ + b*BRS
 CMQ ~ c*CRT 
 BRS ~ d*CRT
 CMQ ~~ BRS
@@ -111,7 +131,7 @@ semPaths(fit1, what = "est", layout =  "tree2", sizeMan = 10, sizeLat = 15,
 
 #alternative model 
 model2 <- '
-VTM ~ DMS + a*CMQ + b*BRS
+VOI ~ DMS + a*CMQ + b*BRS
 CMQ ~ c*DMS 
 BRS ~ d*DMS
 CMQ ~~ BRS
@@ -149,7 +169,7 @@ par(mfrow = c(2,3) )
 hist(df$CRT)
 hist(df$CMQ)
 hist(df$BRS)
-hist(df$VTM)
+hist(df$VOI)
 hist(df$DMS)
 
 qqnorm(df$CRT)
@@ -160,6 +180,8 @@ shapiro.test(df$VTM)
 shapiro.test(df$BRS)
 shapiro.test(df$DMS)
 
+#the following code didn't work
+'''
 library(semPower)
 semPower.postHoc(alpha = 0.05,
                  N = 194,
@@ -172,3 +194,13 @@ library(simsem)
 power_result <- sim(model = model1, n = 200, nRep = 1000, generate = model, 
                     paramNames = list(b = 0.3))
 summary(power_result)
+'''
+###
+
+
+#trying some plots 
+library(lavaanPlot)
+lavaanPlot(model = fit1, coef = TRUE, stand = TRUE, covs = TRUE, stars = "regress")
+lavaanPlot(model = fit2, coef = TRUE, stand = TRUE, covs = TRUE, stars = "regress")
+lavaanPlot(model = fit_boot, coef = TRUE, stand = TRUE, covs = TRUE, stars = "regress")
+
