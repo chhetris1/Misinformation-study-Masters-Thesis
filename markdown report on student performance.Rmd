@@ -1,0 +1,94 @@
+---
+title: "Student Performance Analysis"
+author: "Sanjay Chhetri"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Introduction
+
+The goal of this project is to analyze how students' reading and writing scores relate to their math scores and to build a simple predictive model based on these relationships.
+
+# Data Loading
+
+```{r}
+# Load the dataset
+student_data <- read_csv("StudentsPerformance.csv")
+
+# View the first few rows
+head(student_data)
+```
+
+# Data Exploration
+
+```{r}
+# Structure of the dataset
+glimpse(student_data)
+
+# Summary statistics
+summary(student_data)
+
+# Dataset dimensions
+dim(student_data)
+```
+
+# Visualizations
+
+## Distribution of Math Scores
+
+```{r}
+ggplot(student_data, aes(x = `math score`)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  labs(title = "Distribution of Math Scores", x = "Math Score", y = "Count")
+```
+
+## Reading Score vs Math Score
+
+```{r}
+ggplot(student_data, aes(x = `reading score`, y = `math score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Reading Score vs Math Score", x = "Reading Score", y = "Math Score")
+```
+
+## Writing Score vs Math Score
+
+```{r}
+ggplot(student_data, aes(x = `writing score`, y = `math score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Writing Score vs Math Score", x = "Writing Score", y = "Math Score")
+```
+
+# Modeling
+
+## Linear Regression Model
+
+```{r}
+# Build the linear model
+model <- lm(`math score` ~ `reading score` + `writing score`, data = student_data)
+
+# Model summary
+summary(model)
+```
+
+# Results and Interpretation
+
+- Both reading and writing scores are statistically significant predictors of math score.
+- R-squared value is approximately 0.674, meaning about 67.4% of the variability in math scores can be explained by reading and writing scores.
+
+# Conclusions
+
+- Students who perform better in reading and writing are likely to perform better in math.
+- Reading and writing scores are strong predictors for math performance.
+
+# Future Work
+
+- Incorporate more features like parental education, lunch status, and test preparation.
+- Test model improvements using different regression techniques.
+- Explore classification approaches (e.g., pass/fail prediction based on scores).
